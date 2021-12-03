@@ -5,11 +5,35 @@ import { closingSingleTagOptionEnum } from "posthtml-render"
 
 var input = binaryInput.split("\n")
 
-var columnSums = getColumnSums(input)
 
-var gammaBinary = columnSums.reduce((result, value) => {
-    return result + (value > input.length/2 ? '1' : '0')
-}, '')
+var gammaBinary = getMostCommonBinary(input)
+
+
+var [gamma, epsilon] = getCodes(gammaBinary)
+
+console.log({gamma, epsilon})
+console.log('power', gamma*epsilon)
+
+
+
+function getMostCommonBinary(input) {
+    let sums = getColumnSums(input)
+    let result = sums.reduce((result, value) => {
+        return result + (value > input.length/2 ? '1' : '0')
+    }, '')
+    return result
+}
+
+
+
+
+
+
+
+
+
+
+
 
 function getColumnSums(input) {
     result = _.fill(Array(input[0].length), 0)
@@ -39,21 +63,3 @@ function getCodes(binary) {
     let epsilon = 2**binary.length-1-gamma
     return [gamma, epsilon]
 }
-
-var [gamma, epsilon] = getCodes(gammaBinary)
-
-console.log({gamma, epsilon})
-console.log('power', gamma*epsilon)
-
-
-
-
-
-
-
-
-
-
-
-
-

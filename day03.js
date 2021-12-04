@@ -16,20 +16,43 @@ console.log('power', gamma*epsilon)
 
 
 
+// Oxygen
+
+let oxygenInput = _.cloneDeep(input)
+let oxygenResult = 0
+for (let i=0; i<input[0].length; i++) {
+    let mostCommon = getMostCommonBinary(oxygenInput)[i]
+    oxygenInput = oxygenInput.filter((input) => {
+        return input[i] == mostCommon
+    })
+    if (oxygenInput.length === 1) {
+        oxygenResult = binaryToDecimal( oxygenInput[0])
+        break
+    }
+}
+
+let carbonInput = _.cloneDeep(input)
+let carbonResult = ''
+for (let i=0; i<input[0].length; i++) {
+    let leastCommon = (1-parseInt(getMostCommonBinary(carbonInput)[i])).toString()
+    carbonInput = carbonInput.filter((input) => {
+        return input[i] == leastCommon
+    })
+    if (carbonInput.length === 1) {
+        carbonResult = binaryToDecimal( carbonInput[0])
+        break
+    }
+}
+console.log({oxygenResult, carbonResult})
+
+
 function getMostCommonBinary(input) {
     let sums = getColumnSums(input)
     let result = sums.reduce((result, value) => {
-        return result + (value > input.length/2 ? '1' : '0')
+        return result + (value >= input.length/2 ? '1' : '0')
     }, '')
     return result
 }
-
-
-
-
-
-
-
 
 
 

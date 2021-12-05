@@ -76,7 +76,6 @@ function markBoard(board, number) {
         for (let j=0; j<5; j++) {
             if (board[i][j].value === number) {
                 board[i][j].marked = true
-                breaker = true
                 return
             }
         }
@@ -105,6 +104,7 @@ function checkBoard(board, index) {
 
 console.log(markedBoards)
 
+export default {}
 
 // for (let i=0; i<5; i++) {
 //     for (let j=0; j<5; j++) {

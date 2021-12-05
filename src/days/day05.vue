@@ -2,7 +2,9 @@
 import {watchEffect, reactive} from 'vue'
 import _ from 'lodash'
 import {data} from './day05.data.js'
-import {zeros} from "../helpers/arrayHelper";
+import * as math from 'mathjs'
+
+window.math = math
 
 function expose(obj) {
   for (let key in obj) {
@@ -13,7 +15,7 @@ function expose(obj) {
 export default {
   setup(){
 
-    let grid = zeros(1000,1000)
+    let grid = math.zeros(1000,1000).toArray()
 
     for (let n=0; n<data.length; n++) {
       let [start, end] = data[n]

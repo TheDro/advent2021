@@ -1,6 +1,6 @@
 <script>
 import {reactive} from 'vue'
-import Day from '../days/day05.vue'
+import Day from '../days/day06.vue'
 
 export default {
   components: {Day}
@@ -13,5 +13,11 @@ export default {
 </template>
 
 <style>
-
+canvas {
+  image-rendering: optimizeSpeed;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: optimize-contrast;
+  -ms-interpolation-mode: nearest-neighbor;
+}
 </style>

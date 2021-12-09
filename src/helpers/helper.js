@@ -1,9 +1,13 @@
 import _ from 'lodash'
 import * as math from "mathjs";
 
-function imagesc(img, scale = 1) {
-  let oldCanvas = document.getElementById('canvas')
-  oldCanvas?.remove()
+function imagesc(img, scale = 1, clear = true) {
+  if (clear) {
+    let oldCanvases = document.querySelectorAll('#canvas')
+    oldCanvases.forEach((oldCanvas) => {
+      oldCanvas.remove()
+    })
+  }
 
   let nx = math.min(img.length, 1000)
   let ny = math.min(img[0].length, 1000)

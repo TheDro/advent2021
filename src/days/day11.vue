@@ -9,25 +9,44 @@ expose({math, testData, _})
 
 export default {
   setup(){
-    // let data = testData
+    let data = testData
 
-    let grid = _.cloneDeep(data)
+    let state = reactive( {
+      grid: _.cloneDeep(data), flashCount: 0, colors: []
+    })
+    state.colors = [
+        [255, 255, 0],
+        [0, 20, 100],
+        [0, 30, 120],
+        [0, 40, 140],
+        [0, 50, 160],
+        [0, 60, 180],
+        [0, 70, 200],
+        [0, 80, 220],
+        [0, 90, 240],
+        [0, 100, 250],
+    ].map((color) => {
+      return `rgb(${color[0]}, ${color[1]}, ${color[2]})`
+    })
 
-    let flashCount = 0;
-    let previousGrid
-    let steps = 1000
-    for (let n=1; n<=steps; n++) {
-      previousGrid = _.cloneDeep(grid)
-      console.log(`STEP ${n}`)
-      grid = math.add(grid, 1)
-      let currentFlashes = applyFlash(grid)
-      flashCount += currentFlashes
-      console.log({currentFlashes, flashCount})
-      if (currentFlashes === grid.length*grid[0].length) {
-        console.log(`ALL FLASH TOGETHER AT STEP ${n}`)
-        break
+
+    let steps = 200
+    advance(steps)
+
+
+    function advance(stepsLeft) {
+      console.log(`STEP ${steps-stepsLeft+1}`)
+      state.grid = math.add(state.grid, 1)
+      let currentFlashes = applyFlash(state.grid)
+      state.flashCount += currentFlashes
+      console.log({currentFlashes, flashCount: state.flashCount})
+      if (currentFlashes === state.grid.length*state.grid[0].length) {
+        console.log(`ALL FLASH TOGETHER AT STEP ${steps-stepsLeft+1}`)
+      } else if (stepsLeft > 0) {
+        setTimeout(() => {advance(stepsLeft-1)}, 200)
       }
     }
+
 
     function applyFlash(grid) {
       let nx = grid.length
@@ -70,25 +89,24 @@ export default {
     }
 
 
-    expose({data, grid, previousGrid})
+    expose({data, state})
 
-    return {grid, previousGrid, steps}
+    return {steps, state}
   }
 }
 
 </script>
 
 <template>
-    <div style="margin: 1rem">{{steps-1}}</div>
-    <div v-for="line of previousGrid">
-      <div style="display: inline-block; width: 2rem;"
-           :class="{bright: value<1}"
-           v-for="value of line">{{value}}</div>
-    </div>
-    <div style="margin: 1rem">{{steps}}</div>
-    <div v-for="line of grid">
-      <div style="display: inline-block; width: 2rem;"
-           :class="{bright: value<1}"
+<!--    <div style="margin: 1rem">{{steps-1}}</div>-->
+<!--    <div v-for="line of previousGrid">-->
+<!--      <div style="display: inline-block; width: 2rem;"-->
+<!--           :class="{bright: value<1}"-->
+<!--           v-for="value of line">{{value}}</div>-->
+<!--    </div>-->
+    <div v-for="line of state.grid">
+      <div :style="{backgroundColor: state.colors[value]}"
+           class="grid-cell"
            v-for="value of line">{{value}}</div>
     </div>
 
@@ -96,7 +114,8 @@ export default {
 </template>
 
 <style>
-.bright {
-  background-color: aqua;
+.grid-cell {
+  display: inline-block;
+  width: 2rem;
 }
 </style>

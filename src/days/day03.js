@@ -59,7 +59,7 @@ function getMostCommonBinary(input) {
 
 
 function getColumnSums(input) {
-    result = _.fill(Array(input[0].length), 0)
+    let result = _.fill(Array(input[0].length), 0)
     for (let i=0; i<input.length; i++) {
         let line = input[i]
         for (let j=0; j<line.length; j++) {

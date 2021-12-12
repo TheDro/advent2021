@@ -11,6 +11,15 @@ kj-HN
 kj-dc`
 
 let testData2 =
+  `start-A
+start-b
+A-c
+A-b
+b-d
+A-end
+b-end`
+
+let testData3 =
   `fs-end
 he-DX
 fs-he
@@ -63,6 +72,7 @@ function remap(data) {
 data = remap(data)
 testData = remap(testData)
 testData2 = remap(testData2)
+testData3 = remap(testData3)
 
 
-export {data, testData, testData2}
+export {data, testData, testData2, testData3}

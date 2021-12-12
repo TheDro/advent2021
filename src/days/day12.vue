@@ -2,21 +2,21 @@
 import {watchEffect, reactive} from 'vue'
 import _ from 'lodash'
 import {imagesc, expose} from "../helpers/helper.js";
-import {testData, testData2, data as routes} from './day12.data.js'
+import {testData, testData2, testData3, data as routes} from './day12.data.js'
 import * as math from 'mathjs'
 
 expose({math, testData, _})
 
 export default {
   setup(){
-    let routes = testData2
+    // let routes = testData3
     console.log({routes})
 
     let paths = []
     paths = getMatches('start', routes)
 
     let closedPaths =  []
-    for (let n=0; n<30; n++) {
+    for (let n=0; n<15; n++) {
       if (paths.length === 0) break
       let nextPaths = []
       paths.forEach((path) => {
@@ -43,10 +43,17 @@ export default {
     function removeOverlaps(paths) {
       for (let i=paths.length-1; i>=0; i--) {
         let path = paths[i]
+        // let smallCaves = ['start', 'end']
+        let doubleVisit = false
         let smallCaves = []
         for (let j=0; j<path.length; j++) {
           let cave = path[j]
-          if (count(smallCaves, cave) === 1) {
+          // debugger
+          if (count(smallCaves, cave) >= 1) {
+            if (!doubleVisit && cave !== 'start' && cave !== 'end') {
+              doubleVisit = true
+              continue
+            }
             paths.splice(i,1)
             break
           } else if (cave.toLowerCase() === cave) {
@@ -115,14 +122,14 @@ export default {
 </script>
 
 <template>
-  <h3>{{closedPaths.length}} closed paths</h3>
-  <div v-for="line of closedPaths">
-    <code>{{line}}</code>
-  </div>
-  <h3>{{paths.length}} remaining paths</h3>
-  <div v-for="line of paths">
-    <code>{{line}}</code>
-  </div>
+<!--  <h3>{{closedPaths.length}} closed paths</h3>-->
+<!--  <div v-for="line of closedPaths">-->
+<!--    <code>{{line}}</code>-->
+<!--  </div>-->
+<!--  <h3>{{paths.length}} remaining paths</h3>-->
+<!--  <div v-for="line of paths">-->
+<!--    <code>{{line}}</code>-->
+<!--  </div>-->
 </template>
 
 <style>

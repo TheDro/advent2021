@@ -2,16 +2,16 @@
 import {watchEffect, reactive} from 'vue'
 import _ from 'lodash'
 import {imagesc, expose} from "../helpers/helper.js";
-import {testData, data} from './day15.data.js'
+import {testData, data as realData} from './day15.data.js'
 import * as math from 'mathjs'
 
 expose({math, testData, _})
 
 export default {
   setup(){
-    // let data = testData
+    let data = realData
 
-    // data = timesFive(data)
+    data = timesFive(data)
 
     let costs = math.zeros(data.length, data[0].length).toArray()
     for2D(data, (i,j) => {
@@ -22,23 +22,25 @@ export default {
     let nx = data.length
     let ny = data[0].length
     let queue = [[0,0]]
-    for (let n=0; n<100000000; n++) {
+    for (let n=0; n<1000000; n++) {
 
-      let [x,y] = queue.pop()
+      // let [x,y] = queue.pop()
+      let [x,y] = popLowest(queue, costs)
       let currentCost = costs[x][y]
       let neighbours = getNeighbours(x, y, nx, ny)
 
       neighbours.forEach((neighbour) => {
         let newValue = currentCost.value+data[neighbour[0]][neighbour[1]]
         let nextCost = costs[neighbour[0]][neighbour[1]]
-        if (nextCost.value > newValue) {
+        if (nextCost.value > newValue && nextCost.visited === false) {
           nextCost.value = newValue
           nextCost.from = [x,y]
+          nextCost.visited = true
           queue.push(neighbour)
         }
       })
 
-      if (n%1000000 === 0) {
+      if (n%10000 === 0) {
         console.log(`queue length: ${queue.length}`)
       }
       if (queue.length === 0) {
@@ -51,7 +53,18 @@ export default {
 
 
 
-
+    function popLowest(queue, costs) {
+      let lowest = Infinity
+      let lowestIndex = 0
+      for (let i=0; i<queue.length; i++) {
+        let value = costs[queue[i][0]][queue[i][1]].value
+        if (value < lowest) {
+          lowest = value
+          lowestIndex = i
+        }
+      }
+      return queue.splice(lowestIndex,1)[0]
+    }
 
     function timesFive(data) {
       let nx = data.length;
@@ -97,6 +110,7 @@ export default {
 
     console.log({result: costs[costs.length-1][costs[0].length-1].value})
 
+    let scale = 2
 
     expose({data})
     let costImage = costs.map((line) => {
@@ -104,8 +118,8 @@ export default {
         return cost.value > 1e9 ? 0 : cost.value
       })
     })
-    imagesc(data, 5)
-    imagesc(costImage, 5, false)
+    imagesc(data, scale)
+    imagesc(costImage, scale, false)
     let pathImage = _.cloneDeep(costImage)
 
     let next = [costs.length-1, costs[0].length-1]
@@ -114,7 +128,7 @@ export default {
       pathImage[next[0]][next[1]] += increase
       next = costs[next[0]][next[1]].from
     }
-    imagesc(pathImage, 5, false)
+    imagesc(pathImage, scale, false)
     expose({costImage})
     return {data}
   }

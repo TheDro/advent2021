@@ -14,7 +14,7 @@ export default {
 
 <style>
 canvas {
-  image-rendering: optimizeSpeed;ª
+  image-rendering: optimizeSpeed;
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: optimize-contrast;

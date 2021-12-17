@@ -9,9 +9,68 @@ expose({math, testData, _})
 
 export default {
   setup(){
-    let data = testData
+    // let data = testData
+    let maxTime = 1000
+    let yPairs = getYTimePairs(data)
+    let xPairs = getXTimePairs(data)
 
-    expose({data})
+    for (let i=yPairs.length-1; i >= 0; i--) {
+      let yPair = yPairs[i]
+      let match = _.find(xPairs, {t: i})
+      if (match) {
+        console.log({match, yPair})
+        break
+      }
+    }
+
+
+    function getXTimePairs(ranges) {
+      let [minX, maxX] = ranges.x
+      let pairs = []
+      for (let i=0; i<100; i++) {
+        let x = 0
+        let vx = i
+        for (let t=1; t <= maxTime; t++) {
+          if (vx === 0 && x < minX) {
+            break
+          }
+          x = x + vx
+          vx = Math.max(vx - 1, 0)
+          if (x > maxX) {
+            break
+          } else if (x >= minX) {
+            pairs.push({t, x, vx: i})
+          }
+        }
+      }
+      return pairs
+    }
+
+
+    function getYTimePairs(ranges) {
+      let [minY,maxY] = ranges.y
+      let pairs = []
+      for (let i=0; i<500; i++) {
+        let y = 0
+        let vy = i
+        let highest = y
+        for (let t=1; t <= maxTime; t++) {
+          y = y + vy
+          vy = vy - 1
+          highest = Math.max(highest, y)
+
+          if (y < minY) {
+            break
+          } else if (y <= maxY) {
+            pairs.push({t, y, vy: i, highest})
+          }
+        }
+      }
+      return pairs
+    }
+
+    console.log({yPairs, xPairs})
+    expose({data, yPairs, xPairs})
 
     return {}
   }

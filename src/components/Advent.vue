@@ -1,6 +1,6 @@
 <script>
 import {reactive} from 'vue'
-import Day from '../days/day19.vue'
+import Day from '../days/day20.vue'
 
 export default {
   components: {Day}

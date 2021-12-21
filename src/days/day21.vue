@@ -30,7 +30,7 @@ function Die(startingValue) {
 export default {
   setup(){
     let data = testData
-    data = realData
+    // data = realData
 
     let die = Die(1)
 
@@ -39,20 +39,57 @@ export default {
       {position: data.player2-1, score: 0}
     ]
 
+    let str = JSON.stringify
+    let parse = JSON.parse
 
-    for (let n=0; n<1000; n++) {
+    let stateCounter = {[str(players)]: 1}
+    // let completeStateCount = {}
+    let wins = [0,0]
+    for (let n=0; n<11; n++) {
       let playerIndex = n % 2
-      let player = players[playerIndex]
-      let roll = die.roll(3)
-      player.position = (player.position+roll) % 10
-      player.score += player.position+1
-      if (player.score >= 1000) {
+      let nextStateCounter = {}
+
+      if (Object.keys(stateCounter).length === 0) {
         break
       }
-    }
-    console.log({players, die})
-    console.log({result1: die.totalRolls*math.min(players[0].score, players[1].score)})
+      for (let stateStr in stateCounter) {
+        let count = stateCounter[stateStr]
+        let newStateStrs = generateStateStrs(stateStr, playerIndex)
+        newStateStrs.forEach((stateStr) => {
+          nextStateCounter[stateStr] = (nextStateCounter[stateStr] || 0) + count
+        })
+      }
 
+      let stateStrs = Object.keys(nextStateCounter)
+      for (let stateStr of stateStrs) {
+        let state = parse(stateStr)
+        if (state[0].score >= 21) {
+          wins[0] += nextStateCounter[stateStr]
+          delete nextStateCounter[stateStr]
+        }
+        if (state[1].score >= 21) {
+          wins[1] += nextStateCounter[stateStr]
+          delete nextStateCounter[stateStr]
+        }
+      }
+
+      stateCounter = nextStateCounter
+      console.log({stateCounter, wins: str(wins)})
+    }
+    // console.log({players, die})
+    // console.log({result1: die.totalRolls*math.min(players[0].score, players[1].score)})
+
+    function generateStateStrs(stateStr, playerIndex) {
+      let newStateStrs = []
+      for (let i=1; i<=3; i++) {
+        let newState = parse(stateStr)
+        let player = newState[playerIndex]
+        player.position = (player.position+i) % 10
+        player.score += player.position+1
+        newStateStrs.push(str(newState))
+      }
+      return newStateStrs
+    }
 
     expose({data, die, Die})
 

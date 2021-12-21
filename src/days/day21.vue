@@ -26,11 +26,12 @@ function Die(startingValue) {
   }
 }
 
+let frequencies = {3: 1, 4: 3, 5: 6, 6: 7, 7: 6, 8: 3, 9: 1}
 
 export default {
   setup(){
     let data = testData
-    // data = realData
+    data = realData
 
     let die = Die(1)
 
@@ -45,7 +46,8 @@ export default {
     let stateCounter = {[str(players)]: 1}
     // let completeStateCount = {}
     let wins = [0,0]
-    for (let n=0; n<11; n++) {
+    console.log({stateCounter, wins: str(wins)})
+    for (let n=0; n<30; n++) {
       let playerIndex = n % 2
       let nextStateCounter = {}
 
@@ -54,10 +56,11 @@ export default {
       }
       for (let stateStr in stateCounter) {
         let count = stateCounter[stateStr]
-        let newStateStrs = generateStateStrs(stateStr, playerIndex)
-        newStateStrs.forEach((stateStr) => {
-          nextStateCounter[stateStr] = (nextStateCounter[stateStr] || 0) + count
-        })
+        let newStateCounter = generateStateCounter(stateStr, playerIndex)
+        for (let newStateStr in newStateCounter) {
+          let newCount = newStateCounter[newStateStr]
+          nextStateCounter[newStateStr] = (nextStateCounter[newStateStr] || 0) + count*newCount
+        }
       }
 
       let stateStrs = Object.keys(nextStateCounter)
@@ -79,16 +82,18 @@ export default {
     // console.log({players, die})
     // console.log({result1: die.totalRolls*math.min(players[0].score, players[1].score)})
 
-    function generateStateStrs(stateStr, playerIndex) {
-      let newStateStrs = []
-      for (let i=1; i<=3; i++) {
+
+    function generateStateCounter(stateStr, playerIndex) {
+      let newStateCounter = {}
+      for (let i=3; i<=9; i++) {
         let newState = parse(stateStr)
         let player = newState[playerIndex]
         player.position = (player.position+i) % 10
         player.score += player.position+1
-        newStateStrs.push(str(newState))
+        let newStateStr = str(newState)
+        newStateCounter[newStateStr] = frequencies[i]
       }
-      return newStateStrs
+      return newStateCounter
     }
 
     expose({data, die, Die})

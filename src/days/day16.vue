@@ -30,7 +30,7 @@ export default {
         let messageStr = JSON.stringify({hex: message.hex.join(''), bin: message.bin.join('')})
         let version = parseInt(getBits(message, 3).join(''), 2)
         let typeId = parseInt(getBits(message, 3).join(''), 2)
-        console.log({version, typeId, messageStr})
+        // console.log({version, typeId, messageStr})
         let packet = {version, typeId}
 
         if (typeId === 4) {
@@ -45,7 +45,7 @@ export default {
 
           }
           packet.value = parseInt(value.join(''), 2)
-          console.log(`getting raw value: ${packet.value}`)
+          // console.log(`getting raw value: ${packet.value}`)
           packets.push(packet)
           // message.bin = []
         } else {
@@ -54,25 +54,60 @@ export default {
             let bitLength = parseInt(getBits(message, 15).join(''), 2)
 
             let subMessage = {hex: [], bin: getBits(message, bitLength)}
-            console.log(`getting packets from next ${bitLength} bits: ${subMessage.bin.join('')}`)
+            // console.log(`getting packets from next ${bitLength} bits: ${subMessage.bin.join('')}`)
             packet.subPackets = parsePackets(subMessage, 99)
             packets.push(packet)
           } else {
             let packetLength = parseInt(getBits(message, 11).join(''), 2)
-            console.log(`getting next ${packetLength} packets from ${JSON.stringify(message)}`)
+            // console.log(`getting next ${packetLength} packets from ${JSON.stringify(message)}`)
             packet.subPackets = parsePackets(message, packetLength)
             packets.push(packet)
           }
         }
 
       }
-      console.log({packets})
+      // console.log({packets})
       return packets
     }
 
     let result = parsePackets(message, 1)[0]
     console.log({result})
     console.log({sum: versionSum([result])})
+
+
+    let testHexes = [
+        'C200B40A82', '04005AC33890', '880086C3E88112', 'CE00C43D881120',
+        'D8005AC2A8F0', 'F600BC2D8F', '9C005AC2F8F0', '9C0141080250320F1802104A08', realData
+    ]
+
+
+    testHexes.forEach((hex) => {
+      let message = {hex: hex.split(''), bin: []}
+      console.log(`Value for ${hex} is ${compute(parsePackets(message,1)[0])}`)
+    })
+
+
+    function compute(packet) {
+
+        if (packet.typeId === 0) {
+          return math.sum( packet.subPackets.map((subPacket) => compute(subPacket)) )
+        } else if (packet.typeId === 1) {
+          return math.prod( packet.subPackets.map((subPacket) => compute(subPacket)) )
+        } else if (packet.typeId === 2) {
+          return math.min( packet.subPackets.map((subPacket) => compute(subPacket)) )
+        } else if (packet.typeId === 3) {
+          return math.max( packet.subPackets.map((subPacket) => compute(subPacket)) )
+        } else if (packet.typeId === 4) {
+          return packet.value
+        } else if (packet.typeId === 5) {
+          return compute(packet.subPackets[0]) > compute(packet.subPackets[1]) ? 1 : 0
+        } else if (packet.typeId === 6) {
+          return compute(packet.subPackets[0]) < compute(packet.subPackets[1]) ? 1 : 0
+        } else if (packet.typeId === 7) {
+          return compute(packet.subPackets[0]) === compute(packet.subPackets[1]) ? 1 : 0
+        }
+
+    }
 
 
     function versionSum(packets) {

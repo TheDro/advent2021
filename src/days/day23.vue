@@ -157,8 +157,8 @@ export default {
 
 
     function popShortest(nextNodes) {
-      let lowestValue = Infinity
-      let lowestIndex = -1
+      let lowestValue = 100000
+      let lowestIndex = 0
       for (let i in nextNodes) {
         if (nextNodes[i].cost < lowestValue) {
           lowestValue = nextNodes[i].cost
@@ -202,18 +202,21 @@ export default {
           }
         }
       })
-      // if (state[0][0] === 0) {
-      //   let right = state[0][1]
-      //   if (isPawn(right)) {
-      //     possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,0], [0,1]) })
+      // ;[0,9].forEach((i) => {
+      //   if (state[0][i] === 0) {
+      //     let right = state[0][i+1]
+      //     if (isPawn(right)) {
+      //       possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,i], [0,i+1]) })
+      //     }
       //   }
-      // }
-      // if (state[0][10] === 0) {
-      //   let left = state[0][9]
-      //   if (isPawn(left)) {
-      //     possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,10], [0,9]) })
+      //   if (state[0][i] === 0) {
+      //     let left = state[0][i-1]
+      //     if (isPawn(left)) {
+      //       possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,i], [0,i-1]) })
+      //     }
       //   }
-      // }
+      // })
+
       ;[2,4,6,8].forEach((i) => {
         if (state[1][i] === 0) {
           let topLeft = state[0][i-1]
@@ -249,7 +252,6 @@ export default {
           return false
         }
         return node.goodness >= goodness
-        // return true
       })
 
     }
@@ -260,7 +262,8 @@ export default {
 
     function getSwapped(state, coord1, coord2) {
       try {
-        let newState = _.cloneDeep(state)
+        // let newState = _.cloneDeep(state)
+        let newState = parse(str(state))
         let value1 = newState[coord1[0]][coord1[1]]
         newState[coord1[0]][coord1[1]] = newState[coord2[0]][coord2[1]]
         newState[coord2[0]][coord2[1]] = value1

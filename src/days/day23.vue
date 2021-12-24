@@ -3,8 +3,9 @@ import {watchEffect, reactive} from 'vue'
 import _ from 'lodash'
 import {imagesc, expose} from "../helpers/helper.js";
 import * as math from 'mathjs'
+import Heap from 'heap-js'
 
-expose({math, _})
+expose({math, _, Heap})
 
 let nx = 2
 
@@ -98,12 +99,14 @@ export default {
 
     let firstNode = {cost: 0, prev: null, code: str(data), state: data, goodness: getGoodness(data)}
     let visitedNodes = {}
-    let nextNodes = {}
-    getNextNodes(firstNode, visitedNodes).forEach((node) => {
-      nextNodes[node.code] = node
-    })
+    let nextNodes = new Heap((a,b) => a.cost - b.cost)
+    // let nextNodes = []
+    merge(nextNodes, getNextNodes(firstNode, visitedNodes))
+    // getNextNodes(firstNode, visitedNodes).forEach((node) => {
+    //   nextNodes[node.code] = node
+    // })
     visitedNodes[firstNode.code] = firstNode
-    for (let n=0; n<300000; n++) {
+    for (let n=0; n<3000000; n++) {
       let nextNode = popShortest(nextNodes)
       if (nextNode === undefined) {
         debugger
@@ -120,7 +123,7 @@ export default {
         visitedNodes[nextNode.code] = nextNode
         break
       }
-      if (n%100 ===0) {
+      if (n%2000 ===0) {
         console.log(nextNode.cost)
       }
       merge(nextNodes, getNextNodes(nextNode, visitedNodes))
@@ -135,12 +138,13 @@ export default {
     console.log({visitedNodes, nextNodes})
 
     function merge(existingNodes, newNodes) {
-      newNodes.forEach((newNode) => {
-        let existingNode = existingNodes[newNode.code]
-        if (!existingNode || (existingNode.cost > newNode.cost)) {
-          existingNodes[newNode.code] = newNode
-        }
-      })
+      existingNodes.push(...newNodes)
+      // newNodes.forEach((newNode) => {
+      //   let existingNode = existingNodes[newNode.code]
+      //   if (!existingNode || (existingNode.cost > newNode.cost)) {
+      //     existingNodes[newNode.code] = newNode
+      //   }
+      // })
     }
 
     function getPath(node, visitedNodes) {
@@ -157,17 +161,18 @@ export default {
 
 
     function popShortest(nextNodes) {
-      let lowestValue = 100000
-      let lowestIndex = 0
-      for (let i in nextNodes) {
-        if (nextNodes[i].cost < lowestValue) {
-          lowestValue = nextNodes[i].cost
-          lowestIndex = i
-        }
-      }
-      let shortest = nextNodes[lowestIndex]
-      delete nextNodes[lowestIndex]
-      return shortest
+      return nextNodes.pop()
+      // let lowestValue = 100000
+      // let lowestIndex = 0
+      // for (let i in nextNodes) {
+      //   if (nextNodes[i].cost < lowestValue) {
+      //     lowestValue = nextNodes[i].cost
+      //     lowestIndex = i
+      //   }
+      // }
+      // let shortest = nextNodes[lowestIndex]
+      // delete nextNodes[lowestIndex]
+      // return shortest
     }
 
 
@@ -202,20 +207,20 @@ export default {
           }
         }
       })
-      // ;[0,9].forEach((i) => {
-      //   if (state[0][i] === 0) {
-      //     let right = state[0][i+1]
-      //     if (isPawn(right)) {
-      //       possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,i], [0,i+1]) })
-      //     }
-      //   }
-      //   if (state[0][i] === 0) {
-      //     let left = state[0][i-1]
-      //     if (isPawn(left)) {
-      //       possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,i], [0,i-1]) })
-      //     }
-      //   }
-      // })
+      ;[0,9].forEach((i) => {
+        if (state[0][i] === 0) {
+          let right = state[0][i+1]
+          if (isPawn(right)) {
+            possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,i], [0,i+1]) })
+          }
+        }
+        if (state[0][i] === 0) {
+          let left = state[0][i-1]
+          if (isPawn(left)) {
+            possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,i], [0,i-1]) })
+          }
+        }
+      })
 
       ;[2,4,6,8].forEach((i) => {
         if (state[1][i] === 0) {
@@ -262,8 +267,9 @@ export default {
 
     function getSwapped(state, coord1, coord2) {
       try {
+        let newState = state.map((row) => [...row])
         // let newState = _.cloneDeep(state)
-        let newState = parse(str(state))
+        // let newState = parse(str(state))
         let value1 = newState[coord1[0]][coord1[1]]
         newState[coord1[0]][coord1[1]] = newState[coord2[0]][coord2[1]]
         newState[coord2[0]][coord2[1]] = value1

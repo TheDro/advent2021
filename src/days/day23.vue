@@ -7,7 +7,7 @@ import Heap from 'heap-js'
 
 expose({math, _, Heap})
 
-let nx = 2
+let nx = 4
 
 function str(state) {
   return state.map((row) => {
@@ -67,6 +67,8 @@ export default {
 ...........
 ##A#B#C#D##
 ##A#B#C#D##
+##A#B#C#D##
+##A#B#C#D##
 `
     let completeState = remap(completeData)
     let completeGoodness = getGoodness(completeState)
@@ -76,22 +78,17 @@ export default {
     let testData = `
 ...........
 ##B#C#B#D##
+##D#C#B#A##
+##D#B#A#C##
 ##A#D#C#A##
 `
 
-//     testData = `
-// ...........
-// ##B#A#C#D##
-// ##A#B#C#D##
-// `
-//     testData = `
-// ...........
-// ##D#B#C#D##
-// ##A#B#C#A##
-// `
+
     let realData = `
 ...........
 ##B#C#A#D##
+##D#C#B#A##
+##D#B#A#C##
 ##B#C#D#A##
 `
     let data = remap(testData)
@@ -100,13 +97,9 @@ export default {
     let firstNode = {cost: 0, prev: null, code: str(data), state: data, goodness: getGoodness(data)}
     let visitedNodes = {}
     let nextNodes = new Heap((a,b) => a.cost - b.cost)
-    // let nextNodes = []
     merge(nextNodes, getNextNodes(firstNode, visitedNodes))
-    // getNextNodes(firstNode, visitedNodes).forEach((node) => {
-    //   nextNodes[node.code] = node
-    // })
     visitedNodes[firstNode.code] = firstNode
-    for (let n=0; n<3000000; n++) {
+    for (let n=0; n<0; n++) {
       let nextNode = popShortest(nextNodes)
       if (nextNode === undefined) {
         debugger
@@ -136,47 +129,6 @@ export default {
     // console.log('next')
     // showAll(nextNodes)
     console.log({visitedNodes, nextNodes})
-
-    function merge(existingNodes, newNodes) {
-      existingNodes.push(...newNodes)
-      // newNodes.forEach((newNode) => {
-      //   let existingNode = existingNodes[newNode.code]
-      //   if (!existingNode || (existingNode.cost > newNode.cost)) {
-      //     existingNodes[newNode.code] = newNode
-      //   }
-      // })
-    }
-
-    function getPath(node, visitedNodes) {
-      let path = []
-      while (true) {
-        path.unshift(node)
-        if (!node.prev) {
-          break
-        }
-        node = visitedNodes[node.prev]
-      }
-      return path
-    }
-
-
-    function popShortest(nextNodes) {
-      return nextNodes.pop()
-      // let lowestValue = 100000
-      // let lowestIndex = 0
-      // for (let i in nextNodes) {
-      //   if (nextNodes[i].cost < lowestValue) {
-      //     lowestValue = nextNodes[i].cost
-      //     lowestIndex = i
-      //   }
-      // }
-      // let shortest = nextNodes[lowestIndex]
-      // delete nextNodes[lowestIndex]
-      // return shortest
-    }
-
-
-    expose({getNextNodes, data, visitedNodes, nextNodes})
 
 
 
@@ -222,6 +174,8 @@ export default {
         }
       })
 
+
+
       ;[2,4,6,8].forEach((i) => {
         if (state[1][i] === 0) {
           let topLeft = state[0][i-1]
@@ -261,6 +215,40 @@ export default {
 
     }
 
+
+
+
+
+
+
+
+
+
+    function merge(existingNodes, newNodes) {
+      existingNodes.push(...newNodes)
+    }
+
+    function getPath(node, visitedNodes) {
+      let path = []
+      while (true) {
+        path.unshift(node)
+        if (!node.prev) {
+          break
+        }
+        node = visitedNodes[node.prev]
+      }
+      return path
+    }
+
+
+    function popShortest(nextNodes) {
+      return nextNodes.pop()
+    }
+
+
+    expose({getNextNodes, data, visitedNodes, nextNodes})
+
+
     function price(pawn) {
       return 10**(pawn-1)
     }
@@ -283,8 +271,6 @@ export default {
     function isPawn(value) {
       return value > 0 && value < 5
     }
-
-
 
     expose({data, str, parse, showAll})
 

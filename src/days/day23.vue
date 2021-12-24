@@ -55,7 +55,7 @@ function showAll(nodes) {
     let node = nodes[index]
     let goodness = node.goodness || getGoodness(node.state)
     let code = node.code || str(node.state)
-    console.log(`${node.cost}:${goodness}\n${code}`)
+    console.log(`${node.cost}:${goodness}\n${code.replaceAll('9',' ').replaceAll('0','.')}`)
   }
 }
 
@@ -91,15 +91,27 @@ export default {
 ##D#B#A#C##
 ##B#C#D#A##
 `
-    let data = remap(testData)
-    data = remap(realData)
+//     testData = `
+// ...........
+// ##A#B#C#D##
+// ##A#B#C#D##
+// ##D#B#C#A##
+// ##D#B#C#A##
+// `
 
-    let firstNode = {cost: 0, prev: null, code: str(data), state: data, goodness: getGoodness(data)}
+
+    let data = remap(testData)
+    // data = remap(realData)
+
+    let firstNode = {cost: 0, prev: null, code: str(data), goodness: getGoodness(data)}
     let visitedNodes = {}
     let nextNodes = new Heap((a,b) => a.cost - b.cost)
     merge(nextNodes, getNextNodes(firstNode, visitedNodes))
     visitedNodes[firstNode.code] = firstNode
-    for (let n=0; n<0; n++) {
+
+    // showAll(visitedNodes)
+    // showAll(nextNodes.toArray())
+    for (let n=0; n<1000000000; n++) {
       let nextNode = popShortest(nextNodes)
       if (nextNode === undefined) {
         debugger
@@ -117,7 +129,7 @@ export default {
         break
       }
       if (n%2000 ===0) {
-        console.log(nextNode.cost)
+        console.log(n/1e6+':'+nextNode.cost+':'+nextNode.goodness)
       }
       merge(nextNodes, getNextNodes(nextNode, visitedNodes))
       // nextNodes.push(...getNextNodes(nextNode, visitedNodes))
@@ -166,39 +178,46 @@ export default {
             possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,i], [0,i+1]) })
           }
         }
-        if (state[0][i] === 0) {
-          let left = state[0][i-1]
+        if (state[0][i+1] === 0) {
+          let left = state[0][i]
           if (isPawn(left)) {
-            possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,i], [0,i-1]) })
+            possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,i+1], [0,i]) })
           }
         }
       })
 
 
 
-      ;[2,4,6,8].forEach((i) => {
-        if (state[1][i] === 0) {
-          let topLeft = state[0][i-1]
+      ;[2,4,6,8].forEach((j) => {
+        if (state[1][j] === 0) {
+          let topLeft = state[0][j-1]
           if (isPawn(topLeft)) {
             // debugger
             // debug = true
-            possibleNodes.push({ prev, cost: cost+2*price(topLeft), state: getSwapped(state,[1,i], [0,i-1]) })
+            possibleNodes.push({ prev, cost: cost+2*price(topLeft), state: getSwapped(state,[1,j], [0,j-1]) })
           }
-          let topRight = state[0][i+1]
+          let topRight = state[0][j+1]
           if (isPawn(topRight)) {
-            possibleNodes.push({ prev, cost: cost+2*price(topRight), state: getSwapped(state, [1,i], [0,i+1]) })
+            possibleNodes.push({ prev, cost: cost+2*price(topRight), state: getSwapped(state, [1,j], [0,j+1]) })
           }
-          let bottom = state[2][i]
+          let bottom = state[2][j]
           if (isPawn(bottom)) {
-            possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [1,i], [2,i]) })
+            possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [1,j], [2,j]) })
           }
         }
-        if (state[2][i] === 0) {
-          let top = state[1][i]
-          if (isPawn(top)) {
-            possibleNodes.push({ prev, cost: cost+1*price(top), state: getSwapped(state, [2,i], [1,i]) })
+
+        ;[2,3,4].forEach((i) => {
+          if (state[i]?.[j] === 0) {
+            let top = state[i-1]?.[j]
+            if (isPawn(top)) {
+              possibleNodes.push({ prev, cost: cost+1*price(top), state: getSwapped(state, [i,j], [i-1,j]) })
+            }
+            let bottom = state[i+1]?.[j]
+            if (isPawn(bottom)) {
+              possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [i,j], [i+1,j]) })
+            }
           }
-        }
+        })
       })
       return possibleNodes.filter((node) => {
         if (debug) {
@@ -206,6 +225,7 @@ export default {
         }
         node.code = str(node.state)
         node.goodness = getGoodness(node.state)
+        delete node.state
 
         if (visitedCodes[node.code]) {
           return false

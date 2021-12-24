@@ -98,7 +98,10 @@ export default {
 
     let firstNode = {cost: 0, prev: null, code: str(data), state: data, goodness: getGoodness(data)}
     let visitedNodes = {}
-    let nextNodes = getNextNodes(firstNode, visitedNodes)
+    let nextNodes = {}
+    getNextNodes(firstNode, visitedNodes).forEach((node) => {
+      nextNodes[node.code] = node
+    })
     visitedNodes[firstNode.code] = firstNode
     for (let n=0; n<300000; n++) {
       let nextNode = popShortest(nextNodes)
@@ -120,7 +123,8 @@ export default {
       if (n%100 ===0) {
         console.log(nextNode.cost)
       }
-      nextNodes.push(...getNextNodes(nextNode, visitedNodes))
+      merge(nextNodes, getNextNodes(nextNode, visitedNodes))
+      // nextNodes.push(...getNextNodes(nextNode, visitedNodes))
       visitedNodes[nextNode.code] = nextNode
 
     }
@@ -130,6 +134,14 @@ export default {
     // showAll(nextNodes)
     console.log({visitedNodes, nextNodes})
 
+    function merge(existingNodes, newNodes) {
+      newNodes.forEach((newNode) => {
+        let existingNode = existingNodes[newNode.code]
+        if (!existingNode || (existingNode.cost > newNode.cost)) {
+          existingNodes[newNode.code] = newNode
+        }
+      })
+    }
 
     function getPath(node, visitedNodes) {
       let path = []
@@ -153,7 +165,9 @@ export default {
           lowestIndex = i
         }
       }
-      return nextNodes.splice(lowestIndex,1)[0]
+      let shortest = nextNodes[lowestIndex]
+      delete nextNodes[lowestIndex]
+      return shortest
     }
 
 

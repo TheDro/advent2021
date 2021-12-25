@@ -91,14 +91,13 @@ export default {
 ##D#B#A#C##
 ##B#C#D#A##
 `
-//     testData = `
-// ...........
-// ##A#B#C#D##
-// ##A#B#C#D##
-// ##D#B#C#A##
-// ##D#B#C#A##
-// `
-
+    testData = `
+...........
+##B#C#B#D##
+##D#C#B#A##
+##D#B#A#C##
+##A#D#C#A##
+`
 
     let data = remap(testData)
     // data = remap(realData)
@@ -106,12 +105,14 @@ export default {
     let firstNode = {cost: 0, prev: null, code: str(data), goodness: getGoodness(data)}
     let visitedNodes = {}
     let nextNodes = new Heap((a,b) => a.cost - b.cost)
-    merge(nextNodes, getNextNodes(firstNode, visitedNodes))
-    visitedNodes[firstNode.code] = firstNode
+    merge(nextNodes, [firstNode])
 
-    // showAll(visitedNodes)
-    // showAll(nextNodes.toArray())
-    for (let n=0; n<1000000000; n++) {
+    // let newNodes = getNextNodes(firstNode, visitedNodes)
+    // visitedNodes[firstNode.code] = firstNode
+
+    let iterations = 1e8
+
+    for (let n=0; n<iterations; n++) {
       let nextNode = popShortest(nextNodes)
       if (nextNode === undefined) {
         debugger
@@ -128,13 +129,29 @@ export default {
         visitedNodes[nextNode.code] = nextNode
         break
       }
+      // if (n%1e6===0) {
+      //   prune(nextNodes, visitedNodes)
+      // }
       if (n%2000 ===0) {
         console.log(n/1e6+':'+nextNode.cost+':'+nextNode.goodness)
       }
-      merge(nextNodes, getNextNodes(nextNode, visitedNodes))
-      // nextNodes.push(...getNextNodes(nextNode, visitedNodes))
+      let newNodes = getNextNodes(nextNode, visitedNodes)
       visitedNodes[nextNode.code] = nextNode
+      merge(nextNodes, newNodes)
 
+
+      // newNodes.forEach((node) => {
+      //   visitedNodes[node.code] = node
+      // })
+      // nextNodes.push(...getNextNodes(nextNode, visitedNodes))
+      // visitedNodes[nextNode.code] = nextNode
+
+    }
+    if (iterations < 10) {
+      console.log('visited:')
+      showAll(visitedNodes)
+      console.log('next:')
+      showAll(nextNodes.toArray())
     }
     // console.log('visited')
     // showAll(visitedNodes)
@@ -148,77 +165,146 @@ export default {
       let debug = false
       let state = stateObj.state || parse(stateObj.code)
       let prev = stateObj.code
+      if (!prev) {
+        debugger
+      }
       let cost = stateObj.cost
       let goodness = getGoodness(state)
       let possibleNodes = []
-      ;[1,3,5,7,9].forEach((i) => {
-        if (state[0][i] === 0) {
-          let bottomLeft = state[1][i-1]
-          if (isPawn(bottomLeft)) {
-            possibleNodes.push({ prev, cost: cost+2*price(bottomLeft), state: getSwapped(state, [0,i], [1,i-1]) })
-          }
-          let bottomRight = state[1][i+1]
-          if (isPawn(bottomRight)) {
-            possibleNodes.push({ prev, cost: cost+2*price(bottomRight), state: getSwapped(state, [0,i], [1,i+1]) })
-          }
-          let left = state[0][i-2]
-          if (isPawn(left)) {
-            possibleNodes.push({ prev, cost: cost+2*price(left), state: getSwapped(state, [0,i], [0,i-2]) })
-          }
-          let right = state[0][i+2]
-          if (isPawn(right)) {
-            possibleNodes.push({ prev, cost: cost+2*price(right), state: getSwapped(state, [0,i], [0,i+2]) })
-          }
-        }
-      })
-      ;[0,9].forEach((i) => {
-        if (state[0][i] === 0) {
-          let right = state[0][i+1]
-          if (isPawn(right)) {
-            possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,i], [0,i+1]) })
-          }
-        }
-        if (state[0][i+1] === 0) {
-          let left = state[0][i]
-          if (isPawn(left)) {
-            possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,i+1], [0,i]) })
-          }
-        }
-      })
-
-
-
-      ;[2,4,6,8].forEach((j) => {
-        if (state[1][j] === 0) {
-          let topLeft = state[0][j-1]
-          if (isPawn(topLeft)) {
-            // debugger
-            // debug = true
-            possibleNodes.push({ prev, cost: cost+2*price(topLeft), state: getSwapped(state,[1,j], [0,j-1]) })
-          }
-          let topRight = state[0][j+1]
-          if (isPawn(topRight)) {
-            possibleNodes.push({ prev, cost: cost+2*price(topRight), state: getSwapped(state, [1,j], [0,j+1]) })
-          }
-          let bottom = state[2][j]
-          if (isPawn(bottom)) {
-            possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [1,j], [2,j]) })
-          }
-        }
-
-        ;[2,3,4].forEach((i) => {
-          if (state[i]?.[j] === 0) {
-            let top = state[i-1]?.[j]
-            if (isPawn(top)) {
-              possibleNodes.push({ prev, cost: cost+1*price(top), state: getSwapped(state, [i,j], [i-1,j]) })
-            }
-            let bottom = state[i+1]?.[j]
-            if (isPawn(bottom)) {
-              possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [i,j], [i+1,j]) })
+      ;[1,3,5,7,9].forEach((j) => {
+        if (state[0][j] === 0) {
+          // Leave hole
+          for (let i=0; i<=nx; i++) {
+            let bottomLeft = state[i][j-1]
+            if (isPawn(bottomLeft)) {
+              possibleNodes.push({ prev, cost: cost+(i+1)*price(bottomLeft), state: getSwapped(state, [0,j], [i,j-1]) })
+              break
             }
           }
-        })
+          for (let i=0; i<=nx; i++) {
+            let bottomRight = state[i][j+1]
+            if (isPawn(bottomRight)) {
+              possibleNodes.push({ prev, cost: cost+(i+1)*price(bottomRight), state: getSwapped(state, [0,j], [i,j+1]) })
+              break
+            }
+          }
+          // Move within corridor
+          let left = state[0][j-2]
+          if (isPawn(left)) {
+            possibleNodes.push({ prev, cost: cost+2*price(left), state: getSwapped(state, [0,j], [0,j-2]) })
+          }
+          let right = state[0][j+2]
+          if (isPawn(right)) {
+            possibleNodes.push({ prev, cost: cost+2*price(right), state: getSwapped(state, [0,j], [0,j+2]) })
+          }
+        }
+
+        // Enter hole
+        if (isPawn(state[0][j])) {
+          for (let i=nx; i>=1; i--) {
+            let bottomLeft = state[i][j-1]
+            if (bottomLeft === 0) {
+              possibleNodes.push({ prev, cost: cost+(i+1)*price(state[0][j]), state: getSwapped(state, [0,j], [i,j-1]) })
+              break
+            }
+          }
+          for (let i=nx; i>=1; i--) {
+            let bottomRight = state[i][j+1]
+            if (bottomRight === 0) {
+              possibleNodes.push({ prev, cost: cost+(i+1)*price(state[0][j]), state: getSwapped(state, [0,j], [i,j+1]) })
+              break
+            }
+          }
+        }
       })
+      // Corners
+      ;[0,9].forEach((j) => {
+        if (state[0][j] === 0) {
+          let right = state[0][j+1]
+          if (isPawn(right)) {
+            possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,j], [0,j+1]) })
+          }
+        }
+        if (state[0][j+1] === 0) {
+          let left = state[0][j]
+          if (isPawn(left)) {
+            possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,j+1], [0,j]) })
+          }
+        }
+      })
+
+      // // Move out of holes
+      // ;[2,4,6,8].forEach((iBottom) => {
+      //   let bottom = state[1][iBottom]
+      //   if (!isPawn(bottom)) return
+      //
+      //   let lefts =  [0,1,3,5,7,9,10].filter((iTop) => iTop < iBottom).sort((a,b) => b-a)
+      //   let rights = [0,1,3,5,7,9,10].filter((iTop) => iTop > iBottom).sort((a,b) => a-b)
+      //   for (let iTop of lefts) {
+      //     let top = state[0][iTop]
+      //     if (top === 0) {
+      //       possibleNodes.push({prev, cost: cost+(iBottom-iTop+1)*price(bottom), state: getSwapped(state, [0,iTop], [1, iBottom])})
+      //     } else {
+      //       break
+      //     }
+      //   }
+      //   for (let iTop of rights) {
+      //     let top = state[0][iTop]
+      //     if (top === 0) {
+      //       possibleNodes.push({prev, cost: cost+(iTop-iBottom+1)*price(bottom), state: getSwapped(state, [0,iTop], [1, iBottom])})
+      //     } else {
+      //       break
+      //     }
+      //   }
+      // })
+      //
+      // // Move into holes
+      // ;[2,4,6,8].forEach((iBottom) => {
+      //   let bottom = state[1][iBottom]
+      //   if (isPawn(bottom)) return
+      //
+      //   let lefts =  [0,1,3,5,7,9,10].filter((iTop) => iTop < iBottom).sort((a,b) => b-a)
+      //   let rights = [0,1,3,5,7,9,10].filter((iTop) => iTop > iBottom).sort((a,b) => a-b)
+      //   for (let iTop of lefts) {
+      //     let top = state[0][iTop]
+      //     if (isPawn(top)) {
+      //       possibleNodes.push({prev, cost: cost+(iBottom-iTop+1)*price(top), state: getSwapped(state, [0,iTop], [1, iBottom])})
+      //       break
+      //     }
+      //   }
+      //   for (let iTop of rights) {
+      //     let top = state[0][iTop]
+      //     if (isPawn(top)) {
+      //       possibleNodes.push({prev, cost: cost+(iTop-iBottom+1)*price(top), state: getSwapped(state, [0,iTop], [1, iBottom])})
+      //       break
+      //     }
+      //   }
+      // })
+
+
+      // Move within holes
+      // ;[2,4,6,8].forEach((j) => {
+      //   if (state[1][j] === 0) {
+      //     let bottom = state[2][j]
+      //     if (isPawn(bottom)) {
+      //       possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [1,j], [2,j]) })
+      //     }
+      //   }
+      //
+      //   ;[2,3,4].forEach((i) => {
+      //     if (state[i]?.[j] === 0) {
+      //       let top = state[i-1]?.[j]
+      //       if (isPawn(top)) {
+      //         possibleNodes.push({ prev, cost: cost+1*price(top), state: getSwapped(state, [i,j], [i-1,j]) })
+      //       }
+      //       let bottom = state[i+1]?.[j]
+      //       if (isPawn(bottom)) {
+      //         possibleNodes.push({ prev, cost: cost+1*price(bottom), state: getSwapped(state, [i,j], [i+1,j]) })
+      //       }
+      //     }
+      //   })
+      // })
+
       return possibleNodes.filter((node) => {
         if (debug) {
           debugger
@@ -241,7 +327,11 @@ export default {
 
 
 
+    function prune(nextNodes, visitedNodes) {
+      let newNodes = new Heap((a,b) => a.cost - b.cost)
 
+      // let node =
+    }
 
 
     function merge(existingNodes, newNodes) {
@@ -251,11 +341,16 @@ export default {
     function getPath(node, visitedNodes) {
       let path = []
       while (true) {
-        path.unshift(node)
-        if (!node.prev) {
-          break
+        try {
+          path.unshift(node)
+          if (!node.prev) {
+            break
+          }
+          node = visitedNodes[node.prev]
+        } catch (e) {
+          debugger
         }
-        node = visitedNodes[node.prev]
+
       }
       return path
     }

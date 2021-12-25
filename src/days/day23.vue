@@ -53,7 +53,8 @@ function showAll(nodes) {
 
   for (let index in nodes) {
     let node = nodes[index]
-    let goodness = node.goodness || getGoodness(node.state)
+    let state = node.state || parse(node.code)
+    let goodness = node.goodness || getGoodness(state)
     let code = node.code || str(node.state)
     console.log(`${node.cost}:${goodness}\n${code.replaceAll('9',' ').replaceAll('0','.')}`)
   }
@@ -99,18 +100,25 @@ export default {
 ##A#D#C#A##
 `
 
+//     testData = `
+// ...........
+// ##B#A#C#D##
+// ##B#A#C#D##
+// ##B#A#C#D##
+// ##B#A#C#D##
+// `
+
     let data = remap(testData)
-    // data = remap(realData)
+    data = remap(realData)
 
     let firstNode = {cost: 0, prev: null, code: str(data), goodness: getGoodness(data)}
     let visitedNodes = {}
     let nextNodes = new Heap((a,b) => a.cost - b.cost)
     merge(nextNodes, [firstNode])
-
-    // let newNodes = getNextNodes(firstNode, visitedNodes)
     // visitedNodes[firstNode.code] = firstNode
 
-    let iterations = 1e8
+
+    let iterations = 2e8
 
     for (let n=0; n<iterations; n++) {
       let nextNode = popShortest(nextNodes)
@@ -136,15 +144,11 @@ export default {
         console.log(n/1e6+':'+nextNode.cost+':'+nextNode.goodness)
       }
       let newNodes = getNextNodes(nextNode, visitedNodes)
-      visitedNodes[nextNode.code] = nextNode
-      merge(nextNodes, newNodes)
-
-
       // newNodes.forEach((node) => {
       //   visitedNodes[node.code] = node
       // })
-      // nextNodes.push(...getNextNodes(nextNode, visitedNodes))
-      // visitedNodes[nextNode.code] = nextNode
+      visitedNodes[nextNode.code] = nextNode
+      merge(nextNodes, newNodes)
 
     }
     if (iterations < 10) {
@@ -153,10 +157,6 @@ export default {
       console.log('next:')
       showAll(nextNodes.toArray())
     }
-    // console.log('visited')
-    // showAll(visitedNodes)
-    // console.log('next')
-    // showAll(nextNodes)
     console.log({visitedNodes, nextNodes})
 
 
@@ -171,115 +171,129 @@ export default {
       let cost = stateObj.cost
       let goodness = getGoodness(state)
       let possibleNodes = []
-      ;[1,3,5,7,9].forEach((j) => {
-        if (state[0][j] === 0) {
-          // Leave hole
-          for (let i=0; i<=nx; i++) {
-            let bottomLeft = state[i][j-1]
-            if (isPawn(bottomLeft)) {
-              possibleNodes.push({ prev, cost: cost+(i+1)*price(bottomLeft), state: getSwapped(state, [0,j], [i,j-1]) })
-              break
-            }
-          }
-          for (let i=0; i<=nx; i++) {
-            let bottomRight = state[i][j+1]
-            if (isPawn(bottomRight)) {
-              possibleNodes.push({ prev, cost: cost+(i+1)*price(bottomRight), state: getSwapped(state, [0,j], [i,j+1]) })
-              break
-            }
-          }
-          // Move within corridor
-          let left = state[0][j-2]
-          if (isPawn(left)) {
-            possibleNodes.push({ prev, cost: cost+2*price(left), state: getSwapped(state, [0,j], [0,j-2]) })
-          }
-          let right = state[0][j+2]
-          if (isPawn(right)) {
-            possibleNodes.push({ prev, cost: cost+2*price(right), state: getSwapped(state, [0,j], [0,j+2]) })
-          }
-        }
-
-        // Enter hole
-        if (isPawn(state[0][j])) {
-          for (let i=nx; i>=1; i--) {
-            let bottomLeft = state[i][j-1]
-            if (bottomLeft === 0) {
-              possibleNodes.push({ prev, cost: cost+(i+1)*price(state[0][j]), state: getSwapped(state, [0,j], [i,j-1]) })
-              break
-            }
-          }
-          for (let i=nx; i>=1; i--) {
-            let bottomRight = state[i][j+1]
-            if (bottomRight === 0) {
-              possibleNodes.push({ prev, cost: cost+(i+1)*price(state[0][j]), state: getSwapped(state, [0,j], [i,j+1]) })
-              break
-            }
-          }
-        }
-      })
-      // Corners
-      ;[0,9].forEach((j) => {
-        if (state[0][j] === 0) {
-          let right = state[0][j+1]
-          if (isPawn(right)) {
-            possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,j], [0,j+1]) })
-          }
-        }
-        if (state[0][j+1] === 0) {
-          let left = state[0][j]
-          if (isPawn(left)) {
-            possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,j+1], [0,j]) })
-          }
-        }
-      })
-
-      // // Move out of holes
-      // ;[2,4,6,8].forEach((iBottom) => {
-      //   let bottom = state[1][iBottom]
-      //   if (!isPawn(bottom)) return
-      //
-      //   let lefts =  [0,1,3,5,7,9,10].filter((iTop) => iTop < iBottom).sort((a,b) => b-a)
-      //   let rights = [0,1,3,5,7,9,10].filter((iTop) => iTop > iBottom).sort((a,b) => a-b)
-      //   for (let iTop of lefts) {
-      //     let top = state[0][iTop]
-      //     if (top === 0) {
-      //       possibleNodes.push({prev, cost: cost+(iBottom-iTop+1)*price(bottom), state: getSwapped(state, [0,iTop], [1, iBottom])})
-      //     } else {
-      //       break
+      // ;[1,3,5,7,9].forEach((j) => {
+      //   if (state[0][j] === 0) {
+      //     // Leave hole
+      //     for (let i=0; i<=nx; i++) {
+      //       let bottomLeft = state[i][j-1]
+      //       if (isPawn(bottomLeft)) {
+      //         possibleNodes.push({ prev, cost: cost+(i+1)*price(bottomLeft), state: getSwapped(state, [0,j], [i,j-1]) })
+      //         break
+      //       }
+      //     }
+      //     for (let i=0; i<=nx; i++) {
+      //       let bottomRight = state[i][j+1]
+      //       if (isPawn(bottomRight)) {
+      //         possibleNodes.push({ prev, cost: cost+(i+1)*price(bottomRight), state: getSwapped(state, [0,j], [i,j+1]) })
+      //         break
+      //       }
+      //     }
+      //     // Move within corridor
+      //     let left = state[0][j-2]
+      //     if (isPawn(left)) {
+      //       possibleNodes.push({ prev, cost: cost+2*price(left), state: getSwapped(state, [0,j], [0,j-2]) })
+      //     }
+      //     let right = state[0][j+2]
+      //     if (isPawn(right)) {
+      //       possibleNodes.push({ prev, cost: cost+2*price(right), state: getSwapped(state, [0,j], [0,j+2]) })
       //     }
       //   }
-      //   for (let iTop of rights) {
-      //     let top = state[0][iTop]
-      //     if (top === 0) {
-      //       possibleNodes.push({prev, cost: cost+(iTop-iBottom+1)*price(bottom), state: getSwapped(state, [0,iTop], [1, iBottom])})
-      //     } else {
-      //       break
+      //
+      //   // Enter hole
+      //   if (isPawn(state[0][j])) {
+      //     for (let i=nx; i>=1; i--) {
+      //       let bottomLeft = state[i][j-1]
+      //       if (bottomLeft === 0) {
+      //         possibleNodes.push({ prev, cost: cost+(i+1)*price(state[0][j]), state: getSwapped(state, [0,j], [i,j-1]) })
+      //         break
+      //       }
+      //     }
+      //     for (let i=nx; i>=1; i--) {
+      //       let bottomRight = state[i][j+1]
+      //       if (bottomRight === 0) {
+      //         possibleNodes.push({ prev, cost: cost+(i+1)*price(state[0][j]), state: getSwapped(state, [0,j], [i,j+1]) })
+      //         break
+      //       }
       //     }
       //   }
       // })
-      //
-      // // Move into holes
-      // ;[2,4,6,8].forEach((iBottom) => {
-      //   let bottom = state[1][iBottom]
-      //   if (isPawn(bottom)) return
-      //
-      //   let lefts =  [0,1,3,5,7,9,10].filter((iTop) => iTop < iBottom).sort((a,b) => b-a)
-      //   let rights = [0,1,3,5,7,9,10].filter((iTop) => iTop > iBottom).sort((a,b) => a-b)
-      //   for (let iTop of lefts) {
-      //     let top = state[0][iTop]
-      //     if (isPawn(top)) {
-      //       possibleNodes.push({prev, cost: cost+(iBottom-iTop+1)*price(top), state: getSwapped(state, [0,iTop], [1, iBottom])})
-      //       break
+      // // Corners
+      // ;[0,9].forEach((j) => {
+      //   if (state[0][j] === 0) {
+      //     let right = state[0][j+1]
+      //     if (isPawn(right)) {
+      //       possibleNodes.push({ prev, cost: cost+1*price(right), state: getSwapped(state, [0,j], [0,j+1]) })
       //     }
       //   }
-      //   for (let iTop of rights) {
-      //     let top = state[0][iTop]
-      //     if (isPawn(top)) {
-      //       possibleNodes.push({prev, cost: cost+(iTop-iBottom+1)*price(top), state: getSwapped(state, [0,iTop], [1, iBottom])})
-      //       break
+      //   if (state[0][j+1] === 0) {
+      //     let left = state[0][j]
+      //     if (isPawn(left)) {
+      //       possibleNodes.push({ prev, cost: cost+1*price(left), state: getSwapped(state, [0,j+1], [0,j]) })
       //     }
       //   }
       // })
+
+      // Move out of holes
+      ;[2,4,6,8].forEach((jBottom) => {
+        let iBottom = -1
+        for (let i=1; i<=nx; i++) {
+          if (isPawn(state[i][jBottom])) {
+            iBottom = i
+            break
+          }
+        }
+        if (iBottom === -1) return
+
+        let bottom = state[iBottom][jBottom]
+
+        let lefts =  [0,1,3,5,7,9,10].filter((jTop) => jTop < jBottom).sort((a,b) => b-a)
+        let rights = [0,1,3,5,7,9,10].filter((jTop) => jTop > jBottom).sort((a,b) => a-b)
+        for (let jTop of lefts) {
+          let top = state[0][jTop]
+          if (top === 0) {
+            possibleNodes.push({prev, cost: cost+(iBottom+jBottom-jTop)*price(bottom), state: getSwapped(state, [iBottom,jBottom], [0, jTop])})
+          } else {
+            break
+          }
+        }
+        for (let jTop of rights) {
+          let top = state[0][jTop]
+          if (top === 0) {
+            possibleNodes.push({prev, cost: cost+(iBottom+jTop-jBottom)*price(bottom), state: getSwapped(state, [iBottom,jBottom], [0, jTop])})
+          } else {
+            break
+          }
+        }
+      })
+
+      // Move into holes
+      ;[2,4,6,8].forEach((jBottom) => {
+        let iBottom = -1
+        for (let i=nx; i>=1; i--) {
+          if (state[i][jBottom] === 0) {
+            iBottom = i
+            break
+          }
+        }
+        if (iBottom === -1) return
+
+        let lefts =  [0,1,3,5,7,9,10].filter((jTop) => jTop < jBottom).sort((a,b) => b-a)
+        let rights = [0,1,3,5,7,9,10].filter((jTop) => jTop > jBottom).sort((a,b) => a-b)
+        for (let jTop of lefts) {
+          let top = state[0][jTop]
+          if (isPawn(top)) {
+            possibleNodes.push({prev, cost: cost+(iBottom+jBottom-jTop)*price(top), state: getSwapped(state, [iBottom,jBottom], [0, jTop])})
+            break
+          }
+        }
+        for (let jTop of rights) {
+          let top = state[0][jTop]
+          if (isPawn(top)) {
+            possibleNodes.push({prev, cost: cost+(iBottom+jTop-jBottom)*price(top), state: getSwapped(state, [iBottom,jBottom], [0, jTop])})
+            break
+          }
+        }
+      })
 
 
       // Move within holes

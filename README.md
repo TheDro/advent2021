@@ -1,4 +1,4 @@
-# Advent 2021
+# Advent 2021 ❄️
 
 This repository contains the solutions for all of the 2021 [Advent of Code](https://adventofcode.com/) challenges. The code in this repo isn't always the prettiest, but it works. ;D
 
@@ -29,7 +29,7 @@ This repository contains the solutions for all of the 2021 [Advent of Code](http
 - Day 19: ⭐⭐⭐⭐⭐
 - Day 20: ⭐⭐⭐
 - Day 21: ⭐⭐⭐⭐
-- Day 22:
-- Day 23:
-- Day 24:
-- Day 25:
+- Day 22: ⭐⭐⭐⭐
+- Day 23: ⭐⭐⭐⭐⭐⭐
+- Day 24: ⭐⭐⭐⭐
+- Day 25: ⭐⭐
